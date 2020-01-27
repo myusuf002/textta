@@ -19,11 +19,13 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 from classifier import urls as classifier_urls
+from learn import urls as learn_urls
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include(classifier_urls)),
+    path('learn/', include(learn_urls)),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 admin.site.site_header = " Textta"
