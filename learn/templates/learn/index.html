@@ -46,6 +46,45 @@
                 </div>
             </form>
         </div> 
+        <div class="col-md-6 my-0 py-3 bg-light border rounded">
+            <h4>Detail Pipeline</h4>
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <th scope="row">Feature Extraction</th>
+                        <td>TF-IDF</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Cross Validation</th>
+                        <td>2 x Crossing</td>
+                    </tr>
+                    <tr>
+                        <th scope="row" colspan=2>Model</th>
+                    </tr>
+                    <tr>
+                        <th scope="row" class="text-right">1. SVM</th>
+                        <td>
+                            <i>Kernel:</i> linear, rbf, sigmoid or poly<br/>
+                            <i>Gamma:</i> auto or scale
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row" class="text-right">2. MNB</th>
+                        <td>
+                            <i>Alpha:</i> 1.0, 0.75, 0.5, 0.25,  0.1 or 0.01<br/>
+                            <i>Fit Prior:</i> True or False
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row" class="text-right">3. KNN</th>
+                        <td>
+                            <i>N Neighbours:</i> 1 ~ length(dataset)/2<br/>
+                        </td>
+                    </tr>
+                </tbody>
+            </table> 
+        </div>
     </div>
 </div>
 

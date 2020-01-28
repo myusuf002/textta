@@ -1,6 +1,9 @@
 from django.conf import settings
 
+import io
 import os
+import urllib
+import base64
 import string
 import numpy as np
 import pandas as pd
@@ -88,11 +91,29 @@ def evaluate_model(model, X_test, y_test, label=[1, 2, 3]):
     df_cm = pd.DataFrame(confusion_matrix(y_test, y_pred, labels=label), index = label, columns = label)
     sn.heatmap(df_cm, annot=True, cmap='Blues')
     plt.title('Confusion Matrix')
-    plt.show()
+    fig = plt.gcf()
+
+    
+
+    buf = io.BytesIO()
+    fig.savefig(buf, format='png')
+    buf.seek(0)
+    plt.clf()
+    plt.cla()
+    plt.close()
+
+    string_fig = base64.b64encode(buf.read())
+    uri_fig = urllib.parse.quote(string_fig)
+    
     print('\nevaluate model')
     print(' > accuracy: %.5f' % accuracy_score(y_test, y_pred))
     print(' > f1-score: %.5f' % f1_score(y_test, y_pred, average='macro'))
     print(' > recall: %.5f' % recall_score(y_test, y_pred, average='macro'))
     print(' > precision: %.5f' % precision_score(y_test, y_pred, average='macro'))
     print()
+    evaluation = {'accuracy': np.round(accuracy_score(y_test, y_pred), 5),
+                  'f1_score': np.round(f1_score(y_test, y_pred, average='macro'), 5),
+                  'recall': np.round(recall_score(y_test, y_pred, average='macro'), 5),
+                  'precision': np.round(precision_score(y_test, y_pred, average='macro'), 5)}
+    return y_pred, evaluation, uri_fig
     # print('\nclasification report:\n', classification_report(y_test, y_pred))
