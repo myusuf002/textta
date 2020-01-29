@@ -5,11 +5,16 @@ from django.conf import settings
 from .forms import pipelineForm
 from .pipelines import *
 import pandas as pd
+import glob
+import os
 
 # Create your views here.
 
 @login_required
-def viewIndex(request):     
+def viewIndex(request):
+    for filename in glob.glob("static/"+request.user.username+"*.pkl"):        
+        os.remove(os.path.join(filename))
+    
     form = pipelineForm(request.POST or None, request.FILES or None)
     if request.method == 'POST':
         if form.is_valid():
@@ -42,9 +47,6 @@ def learnModel(request, data):
     y = document['class'].values
     
     X_train, X_test, y_train, y_test = train_test_split( X, y, test_size=0.25)
-    print('train set:', X_train.shape, y_train.shape)
-    print('test set:', X_test.shape, y_test.shape)
-
     X_train, y_train = resampling(X_train, y_train, sample=data['resample'])
 
     models =  {'svc': GridSearchCV(SVC(), {'kernel': ['linear', 'rbf', 'sigmoid', 'poly'], 'gamma': ['auto', 'scale']}, cv=2),
@@ -54,9 +56,8 @@ def learnModel(request, data):
     eval_models = {}
     for name, model in models.items():        
         model.fit(X_train, y_train)
-        # print("\nbest parameter:", model.best_params_)
         res = pd.DataFrame(model.cv_results_)
-        print(res[['params', 'mean_test_score', 'rank_test_score']].sort_values(by='rank_test_score').head())
+
         res_sort = res[['params', 'mean_test_score', 'rank_test_score']].sort_values(by='rank_test_score').head(3)
         res_disp = res_sort[['params', 'mean_test_score']]
         res_disp['mean_test_score'] = res_disp['mean_test_score'].apply(lambda x:np.round(x, 4))
@@ -81,6 +82,7 @@ def learnModel(request, data):
     context = {
         'title': "Result Pipeline",
         'page': "learn",
+        'user': request.user.username,
         'dataset': data['dataset'].name,
         'category': data['category'],
         'question': data['question'],
@@ -94,6 +96,18 @@ def learnModel(request, data):
         'resample': data['resample'],
         'eval_models': eval_models
     }
+    
+    pickle.dump(vectorizer, open('static/'+request.user.username+'_tfidf_'+data['category'].lower()+'_vec.pkl', 'wb'))
+    pickle.dump(models['svc'], open('static/'+request.user.username+'_svm_'+data['category'].lower()+'_model.pkl', 'wb'))
+    pickle.dump(models['mnb'], open('static/'+request.user.username+'_mnb_'+data['category'].lower()+'_model.pkl', 'wb'))
+    pickle.dump(models['knn'], open('static/'+request.user.username+'_knn_'+data['category'].lower()+'_model.pkl', 'wb'))
+    
     return render(request, 'learn/learn.html', context)
-    # pickle.dump(vectorizer, open('tfidf_enthusiasm_vec_50.pkl', 'wb'))
-    # pickle.dump(model, open('svm_enthusiasm_model_50.pkl', 'wb'))
+
+@login_required
+def viewVectorizer(request):
+    context = {
+        'title': "Vectorizer",
+        'page': "learn"
+    }
+    return render(request, 'learn/vectorizer.html', context)

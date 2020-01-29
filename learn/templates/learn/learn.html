@@ -17,6 +17,9 @@
             <h3 class="font-weight-bold">Dataset: {{ dataset }}</h3>  
             Question: {{ question }} <i>({{ category }})</i>
         </div>
+        <div class="col-md-12 text-right">
+            <a class="btn btn-success btn-sm" href="/static/{{ user }}_tfidf_{{ category|lower }}_vec.pkl">save</a>
+        </div>
         <div class="col-md-6 my-0 py-3">
             <table class="table">
                 <tbody>
@@ -54,128 +57,91 @@
             </table>  
         </div>
     </div>
-        {% for key, value in eval_models.items %}
-            <div class="row py-3 mb-3">
-                <div class="col-md-12 mb-3">
-                    <h3 class="font-weight-bold">Model: {{ value.model_name }}</h3>  
-                    Best Parameter: {{ value.best_params }}
-                </div>
-                <div class="col-md-4">
-                    <h5>Confusion Matrix</h5>
-                    <img class="img-fluid" src="data:image/png;base64, {{ value.conf_matrix }}"/>     
-                </div>
-                <div class="col-md-4">
-                    <h5>Evaluation</h5>
-                    <table class="table">
-                        <tbody>
-                            <tr>
-                                <th scope="row">Test</th>
-                                <td>{{ value.y_test }}</td>
-                            </tr>
-                            <tr>
-                                <th scope="row">Predict</th>
-                                <td>{{ value.y_pred }}</td>
-                            </tr>
-                            <tr>
-                                <th scope="row">Accuracy</th>
-                                <td>{{ value.evaluation.accuracy }}</td>
-                            </tr>
-                            <tr>
-                                <th scope="row">F1 Score</th>
-                                <td>{{ value.evaluation.f1_score }}</td>
-                            </tr>
-                            <tr>
-                                <th scope="row">Recall</th>
-                                <td>{{ value.evaluation.recall }}</td>
-                            </tr>
-                            <tr>
-                                <th scope="row">Precision</th>
-                                <td>{{ value.evaluation.precision }}</td>
-                            </tr>
-                        </tbody>
-                    </table>      
-                </div>
-                <div class="col-md-4">
-                    <h5>Cross Validation</h5>
-                    <table class="table">
+    {% for key, value in eval_models.items %}
+        <div class="row py-3 mb-3">
+            <div class="col-md-12 mb-3">
+                <h3 class="font-weight-bold">Model: {{ value.model_name }}</h3>  
+                Best Parameter: {{ value.best_params }}
+            </div>
+            <div class="col-md-12 text-right">
+                <a class="btn btn-success btn-sm" href="/static/{{ user }}_{{ key }}_{{ category|lower }}_model.pkl">save</a>
+            </div>
+            <div class="col-md-4">
+                <h5>Confusion Matrix</h5>
+                <img class="img-fluid" src="data:image/png;base64, {{ value.conf_matrix }}"/>     
+            </div>
+            <div class="col-md-4">
+                <h5>Evaluation</h5>
+                <table class="table">
+                    <tbody>
                         <tr>
-                            {% for data in value.cros_val %}
-                                <th>{{ data }}</th>
+                            <th scope="row">Test</th>
+                            <td>{{ value.y_test|slice:":10"|join:" " }} ...</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Predict</th>
+                            <td>{{ value.y_pred|slice:":10"|join:" " }} ...</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Accuracy</th>
+                            <td>{{ value.evaluation.accuracy }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">F1 Score</th>
+                            <td>{{ value.evaluation.f1_score }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Recall</th>
+                            <td>{{ value.evaluation.recall }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Precision</th>
+                            <td>{{ value.evaluation.precision }}</td>
+                        </tr>
+                    </tbody>
+                </table>      
+            </div>
+            <div class="col-md-4">
+                <h5>Cross Validation</h5>
+                <table class="table">
+                    <tr>
+                        {% for data in value.cros_val %}
+                            <th>{{ data }}</th>
+                        {% endfor %}
+                    </tr>
+                    {% for _, record in value.cros_val.iterrows %}
+                        <tr>
+                            {% for value in record %}
+                                <td>{{ value }}</td>
                             {% endfor %}
                         </tr>
-                        {% for _, record in value.cros_val.iterrows %}
-                            <tr>
-                                {% for value in record %}
-                                    <td>{{ value }}</td>
-                                {% endfor %}
-                            </tr>
-                        {% endfor %}
-                    </table>       
-                </div>
-            </div>
-        {% endfor %}        
-    
-
-{% comment %}     
-    <div class="row py-3">
-        <div class="col-md-12 mb-3">
-            <h3 class="font-weight-bold">Model: SVM</h3>  
-            Best Parameter: {{ best_params }}
-        </div>
-        <div class="col-md-4">
-            <h5>Confusion Matrix</h5>
-            <img class="img-fluid" src="data:image/png;base64, {{ conf_matrix }}"/>     
-        </div>
-        <div class="col-md-4">
-            <h5>Evaluation</h5>
-            <table class="table">
-                <tbody>
-                    <tr>
-                        <th scope="row">Test</th>
-                        <td>{{ y_test }}</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Predict</th>
-                        <td>{{ y_pred }}</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Accuracy</th>
-                        <td>{{ evaluation.accuracy }}</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">F1 Score</th>
-                        <td>{{ evaluation.f1_score }}</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Recall</th>
-                        <td>{{ evaluation.recall }}</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Precision</th>
-                        <td>{{ evaluation.precision }}</td>
-                    </tr>
-                </tbody>
-            </table>      
-        </div>
-        <div class="col-md-4">
-            <h5>Cross Validation</h5>
-            <table class="table">
-                <tr>
-                    {% for data in cros_val %}
-                        <th>{{ data }}</th>
                     {% endfor %}
-                </tr>
-                {% for _, record in cros_val.iterrows %}
-                    <tr>
-                        {% for value in record %}
-                            <td>{{ value }}</td>
-                        {% endfor %}
-                    </tr>
-                {% endfor %}
-            </table>       
+                </table>       
+            </div>
         </div>
-    </div>
-{% endcomment %}
+    {% endfor %}       
+    <div class="row py-3">
+        <div class="col-md-12 mt-3 text-right bg-light border rounded">
+            <button class="btn btn-danger m-2 px-4" onclick=location=URL>Delete</button>
+            <button class="btn btn-outline-info m-2 px-4" onClick="window.location.reload()">Reset</button>
+            {% comment %} category
+            detail
+            active
+            
+            name
+            category
+            vector
+            created_on
+            detail
+            
+            name
+            category
+            model
+            created_on
+            detail {% endcomment %}
+        </div>
+    </div> 
+
 </div>
 
 
