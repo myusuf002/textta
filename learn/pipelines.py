@@ -9,19 +9,13 @@ import numpy as np
 import pandas as pd
 import seaborn as sn
 import matplotlib.pyplot as plt
-import pickle 
+
 # from wordcloud import WordCloud
 
 from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-from sklearn.svm import SVC
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.neighbors import KNeighborsClassifier
-
 from imblearn.over_sampling import SMOTE
-from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import precision_score, recall_score, confusion_matrix, classification_report, accuracy_score, f1_score
 
 
@@ -110,10 +104,13 @@ def evaluate_model(model, X_test, y_test, label=[1, 2, 3]):
     print(' > f1-score: %.5f' % f1_score(y_test, y_pred, average='macro'))
     print(' > recall: %.5f' % recall_score(y_test, y_pred, average='macro'))
     print(' > precision: %.5f' % precision_score(y_test, y_pred, average='macro'))
+    print('\nclasification report:\n', classification_report(y_test, y_pred))
     print()
+    
     evaluation = {'accuracy': np.round(accuracy_score(y_test, y_pred), 5),
                   'f1_score': np.round(f1_score(y_test, y_pred, average='macro'), 5),
                   'recall': np.round(recall_score(y_test, y_pred, average='macro'), 5),
-                  'precision': np.round(precision_score(y_test, y_pred, average='macro'), 5)}
+                  'precision': np.round(precision_score(y_test, y_pred, average='macro'), 5),
+                  'report': '\nclasification report:\n '+classification_report(y_test, y_pred)}
     return y_pred, evaluation, uri_fig
     # print('\nclasification report:\n', classification_report(y_test, y_pred))

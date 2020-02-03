@@ -17,9 +17,6 @@
             <h3 class="font-weight-bold">Dataset: {{ dataset }}</h3>  
             Question: {{ question }} <i>({{ category }})</i>
         </div>
-        <div class="col-md-12 text-right">
-            <a class="btn btn-success btn-sm" href="/static/{{ user }}_tfidf_{{ category|lower }}_vec.pkl">save</a>
-        </div>
         <div class="col-md-6 my-0 py-3">
             <table class="table">
                 <tbody>
@@ -62,9 +59,6 @@
             <div class="col-md-12 mb-3">
                 <h3 class="font-weight-bold">Model: {{ value.model_name }}</h3>  
                 Best Parameter: {{ value.best_params }}
-            </div>
-            <div class="col-md-12 text-right">
-                <a class="btn btn-success btn-sm" href="/static/{{ user }}_{{ key }}_{{ category|lower }}_model.pkl">save</a>
             </div>
             <div class="col-md-4">
                 <h5>Confusion Matrix</h5>
@@ -118,27 +112,31 @@
                     {% endfor %}
                 </table>       
             </div>
+
+            <div class="col-md-12">
+                <h5>Classification Report</h5>
+                    <pre>{{ value.evaluation.report }}</pre>
+            </div>
         </div>
     {% endfor %}       
     <div class="row py-3">
         <div class="col-md-12 mt-3 text-right bg-light border rounded">
             <button class="btn btn-danger m-2 px-4" onclick=location=URL>Delete</button>
             <button class="btn btn-outline-info m-2 px-4" onClick="window.location.reload()">Reset</button>
-            {% comment %} category
-            detail
-            active
-            
-            name
-            category
-            vector
-            created_on
-            detail
-            
-            name
-            category
-            model
-            created_on
-            detail {% endcomment %}
+
+            <form class="d-inline" action="{% url 'vectorizer' %}" method="POST">
+                {% csrf_token %}                
+                <input type="hidden" name="category" value="{{ category }}">
+                <input type="hidden" name="question" value="{{ question }}">
+                
+                <input type="hidden" name="vector" value="TF-IDF Vectorizer for {{ category|title }} Corpus">
+                {% for key, value in eval_models.items %}                    
+                    <input type="hidden" name="{{ key }}_model" value="{{ value.model_name }}">
+                    <input type="hidden" name="{{ key }}_detail" value="<pre>Model: {{ value.model_name }}<br>{% for key, value in value.best_params.items %}{{ key|title }}: {{ value }}<br>{% endfor %}<br>Train set: {{ train_set }}<br>Test set: {{ test_set }}<br>Accuracy: {{ value.evaluation.accuracy }}<br>F1 score: {{ value.evaluation.f1_score }}<br>Recall: {{ value.evaluation.recall }}<br>Precision: {{ value.evaluation.precision }}<br>{{ value.evaluation.report }}</pre>">
+                {% endfor %}
+
+                <button type="submit" class="btn btn-info  m-2 px-4">Create</button>
+            </form>
         </div>
     </div> 
 

@@ -12,8 +12,13 @@
         <div class="col-md-12 mt-3 text-center">
             <h3>{{ title }}</h3>
         </div> 
-        <div class="col-md-12 mt-3 text-center">
-            <a href="/static/svm_action_model_.pkl">SVM</a>
+        <div class="col-md-12 mt-3">
+            Category: {{ data.category }}<br/>
+            Question: {{ data.question }}<br/>
+            {{ data.vector }}<br/>
+            {{ data.svc_detail|safe }}<br/>
+            {{ data.mnb_detail|safe }}<br/>
+            {{ data.knn_detail|safe }}<br/>
         </div> 
     </div>
 </div>

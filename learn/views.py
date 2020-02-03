@@ -1,24 +1,37 @@
 
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
+from django.core.files import File
 from django.conf import settings
 from .forms import pipelineForm
-from .pipelines import *
+
+
 import pandas as pd
+import numpy as np
 import glob
 import os
 
+import pickle 
+from sklearn.svm import SVC
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import GridSearchCV
+
+from sklearn.model_selection import train_test_split
+from .pipelines import load_dataset, preprocessing, feature_extraction, resampling, evaluate_model
+
+from classifier.models import Question, Vectorizer, Classifier
 # Create your views here.
 
 @login_required
 def viewIndex(request):
-    for filename in glob.glob("static/"+request.user.username+"*.pkl"):        
+    for filename in glob.glob(request.user.username+"*.pkl"):        
         os.remove(os.path.join(filename))
     
     form = pipelineForm(request.POST or None, request.FILES or None)
     if request.method == 'POST':
         if form.is_valid():
-            return learnModel(request, form.cleaned_data)
+            return learnModel(request)
             
     context = {
         'title': "Learn Models",
@@ -28,9 +41,12 @@ def viewIndex(request):
     return render(request, 'learn/index.html', context)
 
 @login_required
-def learnModel(request, data):
-    document = load_dataset(data['dataset'].file)
-    document = preprocessing(document, remove_stopwords=data['stopwords'])
+def learnModel(request):
+    data = request.POST
+    files = request.FILES
+
+    document = load_dataset(files['dataset'].file)
+    document = preprocessing(document, remove_stopwords=data['stopwords'] if data.__contains__('stopwords') else False)
     
 
 
@@ -83,12 +99,12 @@ def learnModel(request, data):
         'title': "Result Pipeline",
         'page': "learn",
         'user': request.user.username,
-        'dataset': data['dataset'].name,
+        'dataset': files['dataset'].name,
         'category': data['category'],
         'question': data['question'],
         'shape': document['class'].shape,
         'distribution': document['class'].value_counts().to_dict(),
-        'remove_stopwords': data['stopwords'],
+        'remove_stopwords': data['stopwords'] if data.__contains__('stopwords') else False,
         'train_set': y_train.size,
         'test_set':  y_test.size,
         'features': X_train.shape[1],
@@ -97,17 +113,82 @@ def learnModel(request, data):
         'eval_models': eval_models
     }
     
-    pickle.dump(vectorizer, open('static/'+request.user.username+'_tfidf_'+data['category'].lower()+'_vec.pkl', 'wb'))
-    pickle.dump(models['svc'], open('static/'+request.user.username+'_svm_'+data['category'].lower()+'_model.pkl', 'wb'))
-    pickle.dump(models['mnb'], open('static/'+request.user.username+'_mnb_'+data['category'].lower()+'_model.pkl', 'wb'))
-    pickle.dump(models['knn'], open('static/'+request.user.username+'_knn_'+data['category'].lower()+'_model.pkl', 'wb'))
+    pickle.dump(vectorizer, open(request.user.username+'_tfidf_'+data['category'].lower()+'_vec.pkl', 'wb'))
+    pickle.dump(models['svc'], open(request.user.username+'_svm_'+data['category'].lower()+'_model.pkl', 'wb'))
+    pickle.dump(models['mnb'], open(request.user.username+'_mnb_'+data['category'].lower()+'_model.pkl', 'wb'))
+    pickle.dump(models['knn'], open(request.user.username+'_knn_'+data['category'].lower()+'_model.pkl', 'wb'))
     
     return render(request, 'learn/learn.html', context)
 
 @login_required
 def viewVectorizer(request):
-    context = {
-        'title': "Vectorizer",
-        'page': "learn"
-    }
-    return render(request, 'learn/vectorizer.html', context)
+    if request.method == 'POST':        
+        context = {
+            'title': "Vectorizer",
+            'page': "learn",
+            'data': request.POST
+        }
+        
+        if Question.objects.filter(category=request.POST['category'].lower()).exists():
+            print('Category exist!')
+            question = Question.objects.get(category=request.POST['category'].lower())
+            question.detail = request.POST['question']
+            question.save()
+
+            tfidf_file = open(request.user.username+'_tfidf_'+request.POST['category'].lower()+'_vec.pkl', 'rb')
+            vectorizer = Vectorizer.objects.get(category=question)
+            vectorizer.vector = File(tfidf_file)
+            vectorizer.save()
+
+            svc_file = open(request.user.username+'_svm_'+request.POST['category'].lower()+'_model.pkl', 'rb')
+            svc_model = Classifier.objects.get(category=question)
+            svc_model.model=File(svc_file)
+            svc_model.save()
+
+            mnb_file = open(request.user.username+'_mnb_'+request.POST['category'].lower()+'_model.pkl', 'rb')
+            mnb_model = Classifier.objects.get(category=question)
+            mnb_model.model=File(mnb_file)
+            mnb_model.save()
+
+            knn_file = open(request.user.username+'_knn_'+request.POST['category'].lower()+'_model.pkl', 'rb')
+            knn_model = Classifier.objects.get(category=question)
+            knn_model.model=File(knn_file)
+            knn_model.save()
+            
+
+        else:
+            question = Question(category=request.POST['category'].lower(), 
+                           detail=request.POST['question'], 
+                           active=True)
+            question.save()
+
+            tfidf_file = open(request.user.username+'_tfidf_'+request.POST['category'].lower()+'_vec.pkl', 'rb')
+            vectorizer = Vectorizer(name="tfidf_"+request.POST['category'].lower()+"_vector", 
+                                    category=question, 
+                                    vector=File(tfidf_file),
+                                    detail=request.POST['vector'])
+            vectorizer.save()
+
+            svc_file = open(request.user.username+'_svm_'+request.POST['category'].lower()+'_model.pkl', 'rb')
+            svc_model = Classifier(name="svm_"+request.POST['category'].lower()+"_model", 
+                                    category=question, 
+                                    model=File(svc_file),
+                                    detail=request.POST['svc_detail'])
+            svc_model.save()
+
+            mnb_file = open(request.user.username+'_mnb_'+request.POST['category'].lower()+'_model.pkl', 'rb')
+            mnb_model = Classifier(name="mnb_"+request.POST['category'].lower()+"_model", 
+                                    category=question, 
+                                    model=File(mnb_file),
+                                    detail=request.POST['mnb_detail'])
+            mnb_model.save()
+
+            knn_file = open(request.user.username+'_knn_'+request.POST['category'].lower()+'_model.pkl', 'rb')
+            knn_model = Classifier(name="knn_"+request.POST['category'].lower()+"_model", 
+                                    category=question, 
+                                    model=File(knn_file),
+                                    detail=request.POST['knn_detail'])
+            knn_model.save()
+
+        return render(request, 'learn/vectorizer.html', context)
+    else: return redirect(viewIndex)

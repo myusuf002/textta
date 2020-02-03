@@ -16,10 +16,10 @@
             <a href="{{request.META.HTTP_REFERER}}">Back</a>
             <table class="table">
                 <tbody>
-                    <tr>
+                    {% comment %} <tr>
                         <th scope="row">Name</th>
                         <td>{{ response.name }}</td>
-                    </tr>
+                    </tr> {% endcomment %}
                     <tr>
                         <th scope="row">Question</th>
                         <td>{{ response.question.detail }}</td>
@@ -29,10 +29,10 @@
                         <td>{{ response.answer }}</td>
                     </tr>
                     <tr>
-                        <th scope="row">Class</th>
+                        <th scope="row">Points</th>
                         <td>
                             {% for predict in predicts %}
-                                - <i>{{ predict.sentimen }}</i> ({{ predict.model }}) <br/>
+                                - <i>{{ predict.nilai }}</i> ({{ predict.model }}) <br/>
                             {% endfor %}
                         </td>
                     </tr>

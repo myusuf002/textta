@@ -16,7 +16,7 @@ class QuestionChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj): return obj.detail
 
 class predictForm(forms.Form):
-    name = forms.CharField(label='Name', max_length=512)
+    # name = forms.CharField(label='Name', max_length=512)
     question = QuestionChoiceField(queryset=Question.objects.all())
     answer = forms.CharField(label='Answer', max_length=512, widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}))
 
@@ -55,8 +55,9 @@ def viewPredict(request, response):
     raw = raw.str.replace('[{}]'.format(string.punctuation), '')
     raw = raw.str.lower()
 
+    print(response['question'])
     # load vectorizer (from corpus of question)
-    vector = Vectorizer.objects.get(pk=response['question'].pk)    
+    vector = Vectorizer.objects.get(category=response['question'])    
     vectorizer = pickle.load(open(vector.vector.path, 'rb'))
 
     # vectorize answer using tf-idf
@@ -71,7 +72,7 @@ def viewPredict(request, response):
     for classifier in models: 
         model = pickle.load(open(classifier.model.path, 'rb'))
         predict = model.predict(denselist)
-        predicts.append({'sentimen': "Sentimen Positif" if predict[0] else "Sentimen Negatif",
+        predicts.append({'nilai': predict[0],
                          'model': classifier.name})
 
     context = {
