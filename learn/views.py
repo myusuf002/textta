@@ -46,7 +46,9 @@ def learnModel(request):
     files = request.FILES
 
     document = load_dataset(files['dataset'].file)
-    document = preprocessing(document, remove_stopwords=data['stopwords'] if data.__contains__('stopwords') else False)
+    document = preprocessing(document, 
+                             remove_stopwords=data['stopwords'] if data.__contains__('stopwords') else False,
+                             stemming=data['stemming'] if data.__contains__('stemming') else False)
     
 
 
@@ -104,6 +106,7 @@ def learnModel(request):
         'question': data['question'],
         'shape': document['class'].shape,
         'distribution': document['class'].value_counts().to_dict(),
+        'stemming': data['stemming'] if data.__contains__('stemming') else False,
         'remove_stopwords': data['stopwords'] if data.__contains__('stopwords') else False,
         'train_set': y_train.size,
         'test_set':  y_test.size,

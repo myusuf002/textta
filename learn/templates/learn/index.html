@@ -19,12 +19,22 @@
                 {% for field in form %}   
                   {% if field.label == "Stopwords" %}
                         <div class="form-row mb-3 mt-0 px-0">
-                            <div class="col-md-8 ml-auto px-4">
+                            <div class="col-md-4 "></div>
+                            <div class="col-md-4  pl-4">
                                 {{ field }}
                                 {% for error in field.errors %}
                                     <span class="small text-danger d-block">{{ error|escape }} </span>
                                 {% endfor %}
                                 <label for="{{ field.id_for_label }}">Remove Stopwords</label>
+                            </div>
+                        
+                    {% elif field.label == "Stemming" %}
+                            <div class="col-md-4 pl-4">
+                                {{ field }}
+                                {% for error in field.errors %}
+                                    <span class="small text-danger d-block">{{ error|escape }} </span>
+                                {% endfor %}
+                                <label for="{{ field.id_for_label }}">Stemming</label>
                             </div>
                         </div>
                     {% else %}

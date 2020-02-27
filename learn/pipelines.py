@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sn
 import matplotlib.pyplot as plt
+from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 
 # from wordcloud import WordCloud
 
@@ -33,8 +34,14 @@ def load_dataset(filename):
 
     return documents
 
-def preprocessing(documents, remove_stopwords=False, encode=False):
+def preprocessing(documents, remove_stopwords=False, encode=False, stemming=False):
     print("preprocessing")
+    if stemming:
+        factory = StemmerFactory()
+        stemmer = factory.create_stemmer()
+        print(" > stemming")
+        documents['script'] = documents['script'].apply(lambda x: stemmer.stem(x))
+        
     if remove_stopwords:
         print(" > remove stopwords")
         documents['script'] = documents['script'].apply(lambda x: ' '.join([word for word in x.split() if word not in (STOPWORDS)]))

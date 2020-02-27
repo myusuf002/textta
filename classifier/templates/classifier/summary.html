@@ -16,8 +16,8 @@
             <a href="{{request.META.HTTP_REFERER}}">Back</a>
         </div> 
         {% for question in questions %}
-            <div class="col-md-4 my-3 border rounded">
-                <table class="table my-3">
+            <div class="col-md-4 my-3">
+                <table class="table my-3 border">
                 <tbody>
                     <tr>
                         <td>Category</td>
@@ -44,11 +44,11 @@
                                 {% if classifier.category == question %}
                                     <div class="mb-2">
                                         {{ classifier.name }}
-                                        <a href="" class="badge badge-info float-right" data-toggle="modal" data-target="#modalClass{{ classsifier.id }}">
+                                        <a href="" class="badge badge-info float-right" data-toggle="modal" data-target="#modalClass{{ classifier.id }}">
                                             Detail
                                         </a>
                                     </div>
-                                    <div class="modal fade" id="modalClass{{ classsifier.id }}" tabindex="-1" role="dialog" aria-hidden="true">
+                                    <div class="modal fade" id="modalClass{{ classifier.id }}" tabindex="-1" role="dialog" aria-hidden="true">
                                     <div class="modal-dialog modal-dialog-centered" role="document">
                                         <div class="modal-content">
                                         <div class="modal-header">

@@ -2,11 +2,8 @@ from django import forms
 from django.core.exceptions import ValidationError
 
 NGRAM_CHOICES = (((1, 1), 'Unigram'),
-                 ((1, 2), 'Unigram - Bigram'), 
-                 ((2, 2), 'Bigram'), 
-                 ((1, 3), 'Unigram - Trigram'),
-                 ((2, 3), 'Bigram - Trigram'), 
-                 ((3, 3), 'Trigram'), )
+                 ((1, 2), 'Bigram'), 
+                 ((1, 3), 'Trigram'), )
 
 RESAMPLE_CHOICES = (('None', 'None'),
                  ('minority', 'Upsampling'), 
@@ -29,6 +26,7 @@ class pipelineForm(forms.Form):
     question = forms.CharField(label='Question', max_length=1024)
     dataset = forms.FileField(label='Dataset', validators=[validate_file_size, validate_file_extension])
     stopwords = forms.BooleanField(label='Stopwords', initial=False, required=False)
+    stemming = forms.BooleanField(label='Stemming', initial=False, required=False)
     n_gram = forms.ChoiceField(label='N-Gram', choices=NGRAM_CHOICES, initial=NGRAM_CHOICES[1])
     resample = forms.ChoiceField(label="Resampling", choices=RESAMPLE_CHOICES, initial=RESAMPLE_CHOICES[0])
 

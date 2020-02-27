@@ -87,3 +87,7 @@ __pycache__/
 local_settings.py
 .env
 staticfiles/
+
+
+### Google ####
+googleservice.json

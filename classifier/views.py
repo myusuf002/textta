@@ -43,6 +43,8 @@ def viewIndex(request):
         'page': "classifier",
         'form': form
     }
+    if 1 == 0: print("Online")
+    else: print("Offline")
     return render(request, 'classifier/index.html', context)
 
 def viewPredict(request, response):  
