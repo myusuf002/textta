@@ -91,3 +91,4 @@ staticfiles/
 
 ### Google ####
 googleservice.json
+config_aws.py

@@ -2,15 +2,21 @@ import os
 import string
 import pickle
 import pandas as pd
+from time import sleep
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 
-from django.http import HttpResponse
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+
+from django.http import HttpResponse, JsonResponse
 from django import forms
 
 from .models import Question, Vectorizer, Classifier
+from .audio import convert_audio, info_audio
+from .transcribe import upload_to_aws, remove_from_aws, transcribe_aws
 
 class QuestionChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj): return obj.detail
@@ -33,6 +39,7 @@ class predictForm(forms.Form):
 # Create your views here.
 
 def viewIndex(request):  
+    
     form = predictForm(request.POST or None)
     if request.method == 'POST':
         if form.is_valid():
@@ -43,9 +50,44 @@ def viewIndex(request):
         'page': "classifier",
         'form': form
     }
-    if 1 == 0: print("Online")
-    else: print("Offline")
+    
     return render(request, 'classifier/index.html', context)
+
+def saveRecord(request):
+    request.session['recorded'] = 1
+    print("... save record ...")
+    audio_data = request.FILES['audio']
+    audio_name = request.POST['name']
+    default_storage.save('audio/'+audio_name, ContentFile(audio_data.read()))
+    info_audio(settings.MEDIA_ROOT+'/audio/'+audio_name)
+    print()
+    # Preprocessing
+    print("... preprocessing ...")
+    convert_audio(settings.MEDIA_ROOT+'/audio/'+audio_name, audio_name)
+    info_audio(audio_name)
+    print()
+
+    # uploading 
+    print("... uploading ...")
+    upload_to_aws(audio_name, audio_name)
+    
+    # Transcribing 
+    print("... transcribing ...")
+    text = transcribe_aws(audio_name)
+    
+    print()
+    print("... clean record ...")
+    
+    remove_from_aws(audio_name)
+    default_storage.delete('audio/'+audio_name)
+    os.remove(audio_name)
+    
+    data = {
+        'name': request.POST['name'],
+        'transcribe': text,
+        'status': "saved"
+    }
+    return JsonResponse(data)
 
 def viewPredict(request, response):  
     with open(os.path.join(settings.STATIC_ROOT, 'classifier/stopwords.txt'), 'rb') as f:

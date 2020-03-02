@@ -1,0 +1,221 @@
+{% extends 'base.html' %} 
+{% load static %}
+
+{% block css %}  
+{% endblock %}
+
+{% block content %}
+
+<div class="container fixed-top mt-5 pt-3">
+    <div class="row">
+        <div class="col">
+            <div class="alert alert-warning alert-dismissible fade" role="alert" id="saveAlert">
+                <strong>The recording has been saved!</strong> Thank you for recording with us.
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <div class="alert alert-warning alert-dismissible fade" role="alert" id="cantsaveAlert">
+                <strong>The recording can't been saved!</strong> Please try again.
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row p-3">
+
+        <div class="col-md-4 my-3 text-center">
+            <div id="formats">Format: start recording to see sample rate</div>
+            <div class="mt-5" id="controls">
+                <button class="btn btn-info rounded-circle m-3" style="width:75px;height:75px" id="recordButton">
+                    <i class="fas fa-microphone fa-2x"></i>
+                </button>
+                <button class="btn btn-info rounded-circle m-3 d-none" style="width:75px;height:75px" id="stopButton">
+                    <i class="fa fa-stop fa-2x"></i>
+                </button>
+            </div>
+            
+            <div class="mx-auto" id="recordResult"></div>
+            <div id="saveDiv">
+                {% comment %} <a class="btn btn-danger text-white d-none px-3 mt-4">Save</a> {% endcomment %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+    <script src="{% static 'recorder.js' %}"></script>
+  	<script>
+        //webkitURL is deprecated but nevertheless
+        URL = window.URL || window.webkitURL;
+
+        var gumStream; 						//stream from getUserMedia()
+        var rec; 							//Recorder.js object
+        var input; 							//MediaStreamAudioSourceNode we'll be recording
+
+        // shim for AudioContext when it's not avb. 
+        var AudioContext = window.AudioContext || window.webkitAudioContext;
+        var audioContext //audio context to help us record
+
+        var recordButton = document.getElementById("recordButton");
+        var stopButton = document.getElementById("stopButton");
+        
+        var saveDiv = document.getElementById("saveDiv");
+
+        var saveAlert = document.getElementById("saveAlert");
+        var cantsaveAlert = document.getElementById("cantsaveAlert");
+
+        //add events to those 2 buttons
+        recordButton.addEventListener("click", startRecording);
+        stopButton.addEventListener("click", stopRecording);
+
+
+        function startRecording() {
+            console.log("recordButton clicked");
+
+            /*
+                Simple constraints object, for more advanced audio features see
+                https://addpipe.com/blog/audio-constraints-getusermedia/
+            */
+            
+            var constraints = { audio: true, video:false }
+
+            /*
+                Disable the record button until we get a success or fail from getUserMedia() 
+            */
+
+            recordButton.classList.add("d-none");
+            stopButton.classList.remove("d-none");
+            // saveButton.classList.add("d-none");
+            saveAlert.classList.remove("show");
+            
+
+            /*
+                We're using the standard promise based getUserMedia() 
+                https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
+            */
+
+            navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
+                console.log("getUserMedia() success, stream created, initializing Recorder.js ...");
+
+                /*
+                    create an audio context after getUserMedia is called
+                    sampleRate might change after getUserMedia is called, like it does on macOS when recording through AirPods
+                    the sampleRate defaults to the one set in your OS for your playback device
+
+                */
+                audioContext = new AudioContext();
+
+                //update the format 
+                document.getElementById("formats").innerHTML="Format: 1 channel pcm @ "+audioContext.sampleRate/1000+"kHz"
+
+                /*  assign to gumStream for later use  */
+                gumStream = stream;
+                
+                /* use the stream */
+                input = audioContext.createMediaStreamSource(stream);
+
+                /* 
+                    Create the Recorder object and configure to record mono sound (1 channel)
+                    Recording 2 channels  will double the file size
+                */
+                rec = new Recorder(input,{numChannels:1})
+
+                //start the recording process
+                rec.record()
+
+                console.log("Recording started");
+
+            }).catch(function(err) {
+                //enable the record button if getUserMedia() fails
+                recordButton.disabled = false;
+                stopButton.disabled = true;
+            });
+        }
+
+        function stopRecording() {
+            console.log("stopButton clicked");
+
+            //disable the stop button, enable the record too allow for new recordings
+            stopButton.classList.add("d-none");
+            recordButton.classList.remove("d-none");
+            // saveButton.classList.remove("d-none");
+            // saveButton.classList.remove("disabled");
+            
+
+            //tell the recorder to stop the recording
+            rec.stop();
+
+            //stop microphone access
+            gumStream.getAudioTracks()[0].stop();
+
+            //create the wav blob and pass it on to createDownloadLink
+            rec.exportWAV(createRecordResult)
+        }
+
+        function createRecordResult(blob) {
+            var recordResult = document.getElementById("recordResult");
+            while(recordResult.firstChild){
+                recordResult.removeChild(recordResult.firstChild);
+            }
+            while(saveDiv.firstChild){
+                saveDiv.removeChild(saveDiv.firstChild);
+            }
+            
+            var url = URL.createObjectURL(blob);
+            var au = document.createElement('audio');
+            
+            var filename = new Date().toISOString().slice(0, 19).replace('T', '_');
+            
+            var saveButton = document.createElement('a');
+            saveButton.classList.add("btn");
+            saveButton.classList.add("btn-info");
+            saveButton.classList.add("text-white");
+            saveButton.classList.add("px-3");
+            saveButton.classList.add("mt-4");
+            saveButton.innerHTML = 'Save'; 
+            saveButton.href = "#";
+            saveButton.addEventListener("click", function(event){
+                var form = new FormData();
+                form.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+                form.append('name', filename+".wav");
+                form.append('audio', blob);
+                
+                $.ajax({
+                    url: "{% url 'save_record' %}",
+                    type: 'POST',
+                    data: form,
+                    processData: false,
+                    contentType: false,
+                    success: function (data) {
+                        console.log('response' + JSON.stringify(data));
+                        saveAlert.classList.add("show");
+                        setTimeout(function(){window.location.reload()}, 3000);
+                        // saveButton.classList.add("disabled");
+                    },
+                    error: function () {
+                    // handle error case here
+                        console.log('Error save record');
+                        cantsaveAlert.classList.add("show");
+                    },
+                    
+                });        
+            })
+            saveDiv.appendChild(saveButton);
+            //add controls to the <audio> element
+            au.controls = true;
+            au.src = url;
+            recordResult.appendChild(au);
+        }
+
+    </script>
+{% endblock %}
