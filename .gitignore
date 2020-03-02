@@ -90,5 +90,6 @@ staticfiles/
 
 
 ### Google ####
-googleservice.json
+*.pkl
+*.wav
 config_aws.py
