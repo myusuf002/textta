@@ -5,9 +5,10 @@ from ckeditor.fields import RichTextField
 # Create your models here.
 class Question(models.Model):
     category = models.CharField(max_length=16, blank=True, null=True)    
-    detail = models.CharField(max_length=1024, blank=True, null=True)    
+    detail = models.TextField(max_length=1024, blank=True, null=True)    
+    label = models.TextField(max_length=1024, blank=True, null=True)
     active = models.BooleanField(blank=True, null=True, default=True)
-
+    
     def __str__(self): return self.category
 
     class Meta:

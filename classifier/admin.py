@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from .models import Question
 class QuestionAdmin(admin.ModelAdmin):
-    list_display = ("category", 'detail', 'active')
+    list_display = ("category", 'detail', 'label', 'active')
     list_filter = ("category", "active",)
     search_fields = ['category', 'detail']
   

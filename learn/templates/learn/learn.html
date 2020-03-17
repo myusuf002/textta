@@ -15,7 +15,8 @@
         <div class="col-md-12 mb-3">
             <a href="{{request.META.HTTP_REFERER}}">Back</a>
             <h3 class="font-weight-bold">Dataset: {{ dataset }}</h3>  
-            Question: {{ question }} <i>({{ category }})</i>
+            Question: {{ question }} <i>({{ category }})</i><br/>
+            Label: {{ label }} 
         </div>
         <div class="col-md-6 my-0 py-3">
             <table class="table">
@@ -136,6 +137,7 @@
                 {% csrf_token %}                
                 <input type="hidden" name="category" value="{{ category }}">
                 <input type="hidden" name="question" value="{{ question }}">
+                <input type="hidden" name="label" value="{{ label }}">
                 
                 <input type="hidden" name="vector" value="TF-IDF Vectorizer for {{ category|title }} Corpus">
                 {% for key, value in eval_models.items %}                    

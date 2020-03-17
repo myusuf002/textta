@@ -1,4 +1,5 @@
 import os
+import json
 import string
 import pickle
 import pandas as pd
@@ -113,11 +114,16 @@ def viewPredict(request, response):
     models = Classifier.objects.filter(category=response['question'])
 
     predicts = []
+    question = Question.objects.filter(category=response['question']).first()
+    labels = json.loads(question.label)
+
     for classifier in models: 
         model = pickle.load(open(classifier.model.path, 'rb'))
         predict = model.predict(denselist)
         predicts.append({'nilai': predict[0],
+                         'label': labels[str(predict[0])],
                          'model': classifier.name})
+        
 
     context = {
         'title': "Classified Answer",

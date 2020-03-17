@@ -104,6 +104,7 @@ def learnModel(request):
         'dataset': files['dataset'].name,
         'category': data['category'],
         'question': data['question'],
+        'label': data['label'],
         'shape': document['class'].shape,
         'distribution': document['class'].value_counts().to_dict(),
         'stemming': data['stemming'] if data.__contains__('stemming') else False,
@@ -136,6 +137,7 @@ def viewVectorizer(request):
             print('Category exist!')
             question = Question.objects.get(category=request.POST['category'].lower())
             question.detail = request.POST['question']
+            question.label = request.POST['label']
             question.save()
 
             tfidf_file = open(request.user.username+'_tfidf_'+request.POST['category'].lower()+'_vec.pkl', 'rb')
@@ -162,6 +164,7 @@ def viewVectorizer(request):
         else:
             question = Question(category=request.POST['category'].lower(), 
                            detail=request.POST['question'], 
+                           label=request.POST['label'],
                            active=True)
             question.save()
 
@@ -192,6 +195,6 @@ def viewVectorizer(request):
                                     model=File(knn_file),
                                     detail=request.POST['knn_detail'])
             knn_model.save()
-
+        
         return render(request, 'learn/vectorizer.html', context)
     else: return redirect(viewIndex)

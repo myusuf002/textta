@@ -32,7 +32,7 @@
                         <th scope="row">Points</th>
                         <td>
                             {% for predict in predicts %}
-                                - <i>{{ predict.nilai }}</i> ({{ predict.model }}) <br/>
+                                - {{ predict.nilai }}. <i>{{ predict.label }}</i> ({{ predict.model }}) <br/>
                             {% endfor %}
                         </td>
                     </tr>

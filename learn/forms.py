@@ -24,6 +24,7 @@ def validate_file_extension(value):
 class pipelineForm(forms.Form):
     category = forms.CharField(label='Category', max_length=16)
     question = forms.CharField(label='Question', max_length=1024)
+    label = forms.CharField(label='Label', max_length=1024)
     dataset = forms.FileField(label='Dataset', validators=[validate_file_size, validate_file_extension])
     stopwords = forms.BooleanField(label='Stopwords', initial=False, required=False)
     stemming = forms.BooleanField(label='Stemming', initial=False, required=False)
