@@ -90,6 +90,5 @@ staticfiles/
 
 
 ### Google ####
-*.pkl
 *.wav
 config_aws.py
